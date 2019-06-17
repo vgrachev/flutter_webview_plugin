@@ -8,6 +8,11 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import android.widget.Toast;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -73,6 +78,10 @@ public class BrowserClient extends WebViewClient {
         data.put("type", isInvalid ? "abortLoad" : "shouldStart");
 
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
+
+        if (isInvalid) {
+            runUrlOutside(view.getContext(), url);
+        }
         return isInvalid;
     }
 
@@ -86,7 +95,21 @@ public class BrowserClient extends WebViewClient {
         data.put("type", isInvalid ? "abortLoad" : "shouldStart");
 
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
+
+        if (isInvalid) {
+            runUrlOutside(view.getContext(), url);
+        }
         return isInvalid;
+    }
+
+    private void runUrlOutside(Context context, String url) {
+//        Toast.makeText(context, "Open browser: " + url, Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        context.startActivity(intent);
+//        Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+//            startActivity(this)
+//        }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -109,6 +132,9 @@ public class BrowserClient extends WebViewClient {
     }
 
     private boolean checkInvalidUrl(String url) {
+        if (url.startsWith("https://ser.vi")) {
+            return false;
+        }
         if (invalidUrlPattern == null) {
             return false;
         } else {
